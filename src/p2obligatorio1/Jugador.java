@@ -9,6 +9,7 @@ public class Jugador {
     private int edad;
     private int partidasGanadas;
     private int partidasJugadas;
+    private char color;
     private boolean esInvicto; 
 
     public Jugador(String nombre, int edad) {
@@ -17,6 +18,7 @@ public class Jugador {
         this.partidasGanadas = 0;
         this.partidasJugadas = 0;
         this.esInvicto = false;
+        this.color=' ';
     }
 
     public String getNombre() {
@@ -56,11 +58,18 @@ public class Jugador {
     }
 
     public void setEsInvicto() {
-        //regla para ver si está invicto o no
+        // Regla para ver si está invicto o no
         this.esInvicto = partidasGanadas > 0 && partidasJugadas == partidasGanadas;
     }
-
-    // --- STATS UPDATE ---
+    
+    public void setColor(char color) {
+        this.color = Character.toUpperCase(color);
+    }
+    
+    public char getColor() {
+        return color;    
+    }   
+    
     public void actualizarEstadisticas(boolean gano) {
         this.setPartidasJugadas();
         if (gano) {
