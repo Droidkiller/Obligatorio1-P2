@@ -41,6 +41,10 @@ public class Pieza {
         }
     }
     
+    public void setDibujo(String[] dibujo) {
+        this.dibujo = dibujo;
+    }
+    
     public void invertir() {
         setForma((forma == 'C') ? 'D' : 'C');
         setDibujo();

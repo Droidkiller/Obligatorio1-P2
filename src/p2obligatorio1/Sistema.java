@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Scanner;
+import java.util.InputMismatchException;
 
 public class Sistema {
     private ArrayList<Jugador> jugadores;
@@ -23,29 +24,36 @@ public class Sistema {
         while (enEjecucion) {
             mostrarMenu();
             System.out.println("Ingrese su opción: ");
-            int opcion = in.nextInt();
             
-            switch (opcion) {
-                case 1:
-                    registrarJugador();
-                    break;
-                case 2:
-                    iniciarNuevaPartida();
-                    break;
-                case 3:
-                    // Continuar partida - Lógica pendiente
-                    System.out.println("Opción pendiente: Continuar partida.");
-                    break;
-                case 4:
-                    mostrarRanking();
-                    break;
-                case 5:
-                    enEjecucion = false;
-                    System.out.println("Programa terminado. ¡Hasta pronto!");
-                    break;
-                default:
-                    System.out.println("Opción no válida. Por favor, ingrese un número del 1 al 5.");
+            try {
+                int opcion = in.nextInt();
+            
+                switch (opcion) {
+                    case 1:
+                        registrarJugador();
+                        break;
+                    case 2:
+                        iniciarNuevaPartida();
+                        break;
+                    case 3:
+                        // Continuar partida - Lógica pendiente
+                        System.out.println("Opción pendiente: Continuar partida.");
+                        break;
+                    case 4:
+                        mostrarRanking();
+                        break;
+                    case 5:
+                        enEjecucion = false;
+                        System.out.println("Programa terminado. ¡Hasta pronto!");
+                        break;
+                    default:
+                        System.out.println("Opción no válida. Por favor, ingrese un número del 1 al 5.");
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Entrada inválida. Por favor, ingrese un número del 1 al 5.\n");
+                in.nextLine();
             }
+            
         }
     }
     
@@ -96,29 +104,42 @@ public class Sistema {
 
         System.out.println("\n--- INICIO DE PARTIDA ---");
         
-        ArrayList<Jugador> sortedPlayers = new ArrayList<>(jugadores);
-        Collections.sort(sortedPlayers, Comparator.comparing(Jugador::getNombre, String.CASE_INSENSITIVE_ORDER));
+        ArrayList<Jugador> listaJugadores = new ArrayList<>(jugadores);
+        Collections.sort(listaJugadores, new CriterioAlfabetico());
 
         
         System.out.println("Lista de Jugadores:");
-        for (int i = 0; i < sortedPlayers.size(); i++) {
-            System.out.println((i + 1) + ". " + sortedPlayers.get(i).getNombre());
+        for (int i = 0; i < listaJugadores.size(); i++) {
+            System.out.println((i + 1) + ". " + listaJugadores.get(i).getNombre());
         }
 
-        Jugador playerWhite = seleccionarJugador("JUGADOR BLANCO (o)", sortedPlayers);
-        Jugador playerBlack = seleccionarJugador("JUGADOR NEGRO (●)", sortedPlayers);
+        Jugador jugadorBlanco = seleccionarJugador("JUGADOR BLANCO (o)", listaJugadores);
+        Jugador jugadorNegro = seleccionarJugador("JUGADOR NEGRO (●)", listaJugadores);
         
-        while (playerWhite == playerBlack) {
-            System.out.println("¡ERROR! El jugador Blanco y el Negro deben ser diferentes.");
-            playerBlack = seleccionarJugador("JUGADOR NEGRO (●)", sortedPlayers);
+        while (jugadorBlanco == jugadorNegro) {
+            System.out.println("Atencion: El jugador Blanco y el Negro deben ser diferentes. Intentelo de nuevo.");
+            jugadorNegro = seleccionarJugador("JUGADOR NEGRO (●)", listaJugadores);
         }
 
         System.out.println("Partida iniciada:");
-        System.out.println("Blanco: " + playerWhite.getNombre() + " | Negro: " + playerBlack.getNombre());
+        System.out.println("Blanco: " + jugadorBlanco.getNombre() + " | Negro: " + jugadorNegro.getNombre());
 
-        // LÓGICA DEL JUEGO PENDIENTE: Crear Board y comenzar turnos aquí.
-        // Game newGame = new Game(playerWhite, playerBlack);
-        // newGame.run();
+        Partida partida = new Partida(jugadorBlanco, jugadorNegro);
+        partida.iniciar();  
+        
+        Jugador ganador = partida.getGanador();  // Suponiendo que agregaste este método en Partida
+        boolean empate = partida.hayEmpate();    // Suponiendo que agregaste este método
+
+        if (empate) {
+            System.out.println("La partida terminó en empate.");
+            jugadorBlanco.actualizarEstadisticas(false);
+            jugadorNegro.actualizarEstadisticas(false);
+        } else if (ganador != null) {
+            System.out.println("¡El ganador es " + ganador.getNombre() + "!");
+            ganador.actualizarEstadisticas(true);
+            Jugador perdedor = (ganador == jugadorBlanco) ? jugadorNegro : jugadorBlanco;
+            perdedor.actualizarEstadisticas(false);
+        }
     }
     
     // Helper opción 2
@@ -140,11 +161,11 @@ public class Sistema {
         System.out.println("\n--- RANKING POR PARTIDAS GANADAS ---");
         
         // Ordenar por partidas ganadas (descendente)
-        ArrayList<Jugador> jugadoresClasificados = new ArrayList<>(jugadores);
-        Collections.sort(jugadoresClasificados, Comparator.comparing(Jugador::getPartidasGanadas).reversed());
+        ArrayList<Jugador> listaJugadores = new ArrayList<>(jugadores);
+        Collections.sort(listaJugadores, new CriterioPartidasGanadas());
 
-        for (int i = 0; i < jugadoresClasificados.size(); i++) {
-            Jugador p = jugadoresClasificados.get(i);
+        for (int i = 0; i < listaJugadores.size(); i++) {
+            Jugador p = listaJugadores.get(i);
             System.out.printf("%d. %s - Ganadas: %d / Jugadas: %d\n", 
                 (i + 1), p.getNombre(), p.getPartidasGanadas(), p.getPartidasJugadas());
         }
@@ -166,6 +187,26 @@ public class Sistema {
             for (Jugador j : invictos) {
                 System.out.println("- " + j.getNombre());
             }
+        }
+    }
+    
+    // Ordenar alfabéticamente
+    private class CriterioAlfabetico implements Comparator<Jugador> {
+        @Override
+        public int compare(Jugador j1, Jugador j2) {
+            return j1.getNombre().compareToIgnoreCase(j2.getNombre());
+        }
+    }
+
+    // Ordenar por partidas ganadas
+    private class CriterioPartidasGanadas implements Comparator<Jugador> {
+        @Override
+        public int compare(Jugador j1, Jugador j2) {
+            int diff = j2.getPartidasGanadas() - j1.getPartidasGanadas(); // descendiente
+            if (diff == 0) {
+                return j1.getNombre().compareToIgnoreCase(j2.getNombre()); // en caso de mismas partidas ganadas
+            }
+            return diff;
         }
     }
 }

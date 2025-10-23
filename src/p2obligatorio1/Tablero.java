@@ -73,4 +73,19 @@ public class Tablero {
         }
         System.out.println("+");
     }
+    
+    public void resaltarAlineacionGanadora(int[][] coords, char letra) {
+        for (int[] celda : coords) {
+            int fila = celda[0];
+            int col = celda[1];
+            if (tablero[fila][col] != null) {
+                String[] nuevoDibujo = new String[3];
+                for (int i = 0; i < 3; i++) {
+                    // Fill both characters with the letter
+                    nuevoDibujo[i] = "" + letra + letra;
+                }
+                tablero[fila][col].setDibujo(nuevoDibujo);
+            }
+        }
+    }
 }
