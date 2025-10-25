@@ -123,9 +123,6 @@ public class Partida {
                     tablero.invertirPieza(fila, col);
                 }
                 esValido = true;
-                if (!verificarGanador()) {
-                    cambiarTurno();  // Automatically alternate after a successful move
-                }
             } else {
                 System.out.println("Movimiento inválido.");
             }
