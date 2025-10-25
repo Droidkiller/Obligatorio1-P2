@@ -52,6 +52,7 @@ public class Partida {
 
     private boolean procesarJugada(String jugada, Scanner in) {
         boolean jugadaValida = false;
+        boolean cambiaTurno = true;
 
         switch (jugada) {
             case "X":
@@ -75,16 +76,19 @@ public class Partida {
             case "B":
                 mostrarHeaders = true;
                 jugadaValida = true;
+                cambiaTurno = false;
                 break;
 
             case "N":
                 mostrarHeaders = false;
                 jugadaValida = true;
+                cambiaTurno = false;
                 break;
 
             case "H":
-                // lógica de ayuda pendiente
+                mostrarAyuda();
                 jugadaValida = true;
+                cambiaTurno = false;
                 break;
 
             default:
@@ -94,7 +98,7 @@ public class Partida {
         if (jugadaValida && !juegoTerminado) {
             if (verificarGanador()) {
                 System.out.println("¡Hay ganador! " + ganador.getNombre());
-            } else {
+            } else if(cambiaTurno) {
                 cambiarTurno();
             }
         }
@@ -250,6 +254,45 @@ public class Partida {
         return hayGanador;
     }
 
+    private void mostrarAyuda() {
+        Pieza[][] matriz = tablero.getTablero();
+
+        for (int fila = 0; fila < 3; fila++) {
+            for (int col = 0; col < 6; col++) {
+                for (char accion : new char[]{'C', 'D', 'I'}) {
+
+                    // skip invalid actions
+                    if (!esJugadaEstadoValido(fila, col, accion)) continue;
+
+                    // guardar estado original
+                    Pieza original = matriz[fila][col];
+
+                    // aplicar movimiento temporal
+                    if (accion == 'C' || accion == 'D') {
+                        matriz[fila][col] = new Pieza(accion, jugadorActual.getColor());
+                    } else if (accion == 'I') {
+                        tablero.invertirPieza(fila, col);
+                    }
+
+                    // verificar si gana
+                    boolean gana = verificarGanador();
+
+                    // revertir tablero
+                    matriz[fila][col] = original;
+                    juegoTerminado = false;  // revertir flag
+                    ganador = null;          // limpiar ganador
+
+                    if (gana && ganador == jugadorActual) {
+                        System.out.printf("💡 Si jugás en %c%d%c ganás la partida.\n",
+                                (char) ('A' + fila), col + 1, accion);
+                        return;
+                    }
+                }
+            }
+        }
+
+        System.out.println("No hay jugada ganadora disponible.");
+    }
     
     public boolean hayEmpate() {
         boolean resultado = false;
