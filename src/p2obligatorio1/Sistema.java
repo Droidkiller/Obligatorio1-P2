@@ -36,8 +36,7 @@ public class Sistema {
                         iniciarNuevaPartida();
                         break;
                     case 3:
-                        // Continuar partida - Lógica pendiente
-                        System.out.println("Opción pendiente: Continuar partida.");
+                        continuarPartida();
                         break;
                     case 4:
                         mostrarRanking();
@@ -108,18 +107,9 @@ public class Sistema {
         Collections.sort(listaJugadores, new CriterioAlfabetico());
 
         
-        System.out.println("Lista de Jugadores:");
-        for (int i = 0; i < listaJugadores.size(); i++) {
-            System.out.println((i + 1) + ". " + listaJugadores.get(i).getNombre());
-        }
-
-        Jugador jugadorBlanco = seleccionarJugador("JUGADOR BLANCO (o)", listaJugadores);
-        Jugador jugadorNegro = seleccionarJugador("JUGADOR NEGRO (●)", listaJugadores);
-        
-        while (jugadorBlanco == jugadorNegro) {
-            System.out.println("Atencion: El jugador Blanco y el Negro deben ser diferentes. Intentelo de nuevo.");
-            jugadorNegro = seleccionarJugador("JUGADOR NEGRO (●)", listaJugadores);
-        }
+        Jugador[] pareja = elegirJugadores(listaJugadores);
+        Jugador jugadorBlanco = pareja[0];
+        Jugador jugadorNegro = pareja[1];
 
         System.out.println("Partida iniciada:");
         System.out.println("Blanco: " + jugadorBlanco.getNombre() + " | Negro: " + jugadorNegro.getNombre());
@@ -127,8 +117,8 @@ public class Sistema {
         Partida partida = new Partida(jugadorBlanco, jugadorNegro);
         partida.iniciar();  
         
-        Jugador ganador = partida.getGanador();  // Suponiendo que agregaste este método en Partida
-        boolean empate = partida.hayEmpate();    // Suponiendo que agregaste este método
+        Jugador ganador = partida.getGanador(); 
+        boolean empate = partida.hayEmpate();    
 
         if (empate) {
             System.out.println("La partida terminó en empate.");
@@ -142,18 +132,92 @@ public class Sistema {
         }
     }
     
-    // Helper opción 2
-    private Jugador seleccionarJugador(String rol, ArrayList<Jugador> jugadores) {
-        int index = -1;
+    private Jugador[] elegirJugadores(ArrayList<Jugador> listaJugadores) {
         Scanner in = new Scanner(System.in);
-        while (index < 1 || index > jugadores.size()) {
-            System.out.println("Seleccione el número para " + rol + ": ");
-            index = in.nextInt();
-            if (index < 1 || index > jugadores.size()) {
+        Jugador jugadorBlanco = null;
+        Jugador jugadorNegro = null;
+
+        // Mostrar lista de jugadores
+        System.out.println("Lista de Jugadores:");
+        for (int i = 0; i < listaJugadores.size(); i++) {
+            System.out.println((i + 1) + ". " + listaJugadores.get(i).getNombre());
+        }
+
+        // Selección de jugador blanco
+        while (jugadorBlanco == null) {
+            System.out.print("Seleccione el número para JUGADOR BLANCO (o): ");
+            int index = in.nextInt();
+            if (index >= 1 && index <= listaJugadores.size()) {
+                jugadorBlanco = listaJugadores.get(index - 1);
+            } else {
                 System.out.println("Número no válido. Ingrese un número de la lista.");
             }
         }
-        return jugadores.get(index - 1);
+
+        // Selección de jugador negro
+        while (jugadorNegro == null) {
+            System.out.print("Seleccione el número para JUGADOR NEGRO (●): ");
+            int index = in.nextInt();
+            if (index >= 1 && index <= listaJugadores.size()) {
+                Jugador elegido = listaJugadores.get(index - 1);
+                if (elegido != jugadorBlanco) {
+                    jugadorNegro = elegido;
+                } else {
+                    System.out.println("Debe ser un jugador diferente al Blanco.");
+                }
+            } else {
+                System.out.println("Número no válido. Ingrese un número de la lista.");
+            }
+        }
+
+        return new Jugador[]{jugadorBlanco, jugadorNegro};
+    }
+    
+    // Opción 3
+    private void continuarPartida() {
+        if (jugadores.size() < 2) {
+            System.out.println("Se necesitan al menos dos jugadores para iniciar una partida.");
+            return;
+        }
+
+        System.out.println("\n--- CONTINUACIÓN DE PARTIDA ---");
+
+        ArrayList<Jugador> listaJugadores = new ArrayList<>(jugadores);
+        Collections.sort(listaJugadores, new CriterioAlfabetico());
+
+        Jugador[] pareja = elegirJugadores(listaJugadores);
+        Jugador jugadorBlanco = pareja[0];
+        Jugador jugadorNegro = pareja[1];
+
+        Partida partida = new Partida(jugadorBlanco, jugadorNegro);
+
+        Scanner in = new Scanner(System.in);
+        System.out.println("Ingrese la secuencia de movimientos (ej: A1C B3B C1D):");
+        String linea = in.nextLine().trim().toUpperCase();
+        String[] jugadas = linea.split(" ");
+
+        // Aplicar secuencia
+        for (String jugada : jugadas) {
+            partida.ejecutarMovimiento(jugada); 
+            partida.getTablero().dibujarTablero(true);
+        }
+
+        // Continuar de forma interactiva hasta terminar la partida
+        partida.iniciar(); 
+
+        Jugador ganador = partida.getGanador();
+        boolean empate = partida.hayEmpate();
+
+        if (empate) {
+            System.out.println("La partida terminó en empate.");
+            jugadorBlanco.actualizarEstadisticas(false);
+            jugadorNegro.actualizarEstadisticas(false);
+        } else if (ganador != null) {
+            System.out.println("¡El ganador es " + ganador.getNombre() + "!");
+            ganador.actualizarEstadisticas(true);
+            Jugador perdedor = (ganador == jugadorBlanco) ? jugadorNegro : jugadorBlanco;
+            perdedor.actualizarEstadisticas(false);
+        }
     }
     
     // Opción 4

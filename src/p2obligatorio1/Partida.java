@@ -33,6 +33,7 @@ public class Partida {
     }
     
     public Jugador getGanador() {return ganador;}
+    public Tablero getTablero() {return tablero;}
 
     public void iniciar() {
         Scanner in = new Scanner(System.in);
@@ -87,27 +88,7 @@ public class Partida {
                 break;
 
             default:
-                if (jugada.length() == 3) {
-                    char filaChar = jugada.charAt(0);
-                    char colChar = jugada.charAt(1);
-                    char accion = jugada.charAt(2);
-
-                    int fila = filaChar - 'A';
-                    int col = Character.getNumericValue(colChar) - 1;
-
-                    if (esJugadaFormatoValido(jugada) && esJugadaEstadoValido(fila, col, accion)) {
-                        if (accion == 'C' || accion == 'D') {
-                            tablero.colocarPieza(fila, col, new Pieza(accion, jugadorActual.getColor()));
-                        } else if (accion == 'I') {
-                            tablero.invertirPieza(fila, col);
-                        }
-                        jugadaValida = true;
-                    } else {
-                        System.out.println("Movimiento inválido.");
-                    }
-                } else {
-                    System.out.println("Formato de jugada inválido.");
-                }
+               jugadaValida = ejecutarMovimiento(jugada);
         }
 
         if (jugadaValida && !juegoTerminado) {
@@ -123,6 +104,35 @@ public class Partida {
 
     private void cambiarTurno() {
         jugadorActual = (jugadorActual == jugador1) ? jugador2 : jugador1;
+    }
+    
+    public boolean ejecutarMovimiento(String jugada) {
+        boolean esValido = false;
+        if (esJugadaFormatoValido(jugada)) {
+            char filaChar = jugada.charAt(0);
+            char colChar = jugada.charAt(1);
+            char accion = jugada.charAt(2);
+
+            int fila = filaChar - 'A';
+            int col = Character.getNumericValue(colChar) - 1;
+
+            if (esJugadaEstadoValido(fila, col, accion)) {
+                if (accion == 'C' || accion == 'D') {
+                    tablero.colocarPieza(fila, col, new Pieza(accion, jugadorActual.getColor()));
+                } else if (accion == 'I') {
+                    tablero.invertirPieza(fila, col);
+                }
+                esValido = true;
+                if (!verificarGanador()) {
+                    cambiarTurno();  // Automatically alternate after a successful move
+                }
+            } else {
+                System.out.println("Movimiento inválido.");
+            }
+        } else {
+            System.out.println("Formato de jugada inválido.");
+        }
+        return esValido;
     }
 
     private boolean esJugadaFormatoValido(String jugada) {
