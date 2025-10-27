@@ -59,6 +59,7 @@ public class Sistema {
     private void mostrarMenu() {
         System.out.println("\n==============================================");
         System.out.println("            Juego Medio Tateti - Menú           ");
+        System.out.println("    AUTORES: Francisco Bonanni y Aitana Álvarez   ");
         System.out.println("==============================================");
         System.out.println("1 - Registrar un jugador");
         System.out.println("2 - Comienzo de partida común");
@@ -72,13 +73,16 @@ public class Sistema {
     private void registrarJugador() {
         System.out.println("\n--- REGISTRO DE JUGADOR ---");
         String nombre;
+        int edad = 0;
         boolean esUnico;
+        boolean edadValida;
         Scanner in = new Scanner(System.in);
 
         do {
             System.out.println("Ingrese nombre: ");
             nombre = in.nextLine().trim();
             esUnico = true;
+            
             for (int i=0;i<jugadores.size() && esUnico;i++) {
                 if (jugadores.get(i).getNombre().equalsIgnoreCase(nombre)) {
                     System.out.println("Ese nombre ya existe. Por favor, ingrese uno diferente.");
@@ -86,8 +90,23 @@ public class Sistema {
                 }
             }
         } while (!esUnico);
-        System.out.println("Ingrese edad: ");
-        int edad = in.nextInt();
+        
+        do {
+            System.out.print("Ingrese edad: ");
+            edadValida = true;
+            try {
+                edad = in.nextInt();
+                if (edad <= 0) {
+                    System.out.println("La edad debe ser un número positivo.");
+                    edadValida = false;
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Entrada inválida. Ingrese un número entero para la edad.");
+                edadValida = false;
+                in.nextLine(); // clear invalid input
+            }
+        } while (!edadValida);
+        in.nextLine();
         
         Jugador nuevoJugador = new Jugador(nombre, edad);
         jugadores.add(nuevoJugador);
