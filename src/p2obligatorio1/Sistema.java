@@ -156,36 +156,43 @@ public class Sistema {
         Jugador jugadorBlanco = null;
         Jugador jugadorNegro = null;
 
-        // Mostrar lista de jugadores
         System.out.println("Lista de Jugadores:");
         for (int i = 0; i < listaJugadores.size(); i++) {
             System.out.println((i + 1) + ". " + listaJugadores.get(i).getNombre());
         }
 
-        // Selección de jugador blanco
         while (jugadorBlanco == null) {
             System.out.print("Seleccione el número para JUGADOR BLANCO (o): ");
-            int index = in.nextInt();
-            if (index >= 1 && index <= listaJugadores.size()) {
-                jugadorBlanco = listaJugadores.get(index - 1);
-            } else {
-                System.out.println("Número no válido. Ingrese un número de la lista.");
+            try {
+                int index = in.nextInt();
+                if (index >= 1 && index <= listaJugadores.size()) {
+                    jugadorBlanco = listaJugadores.get(index - 1);
+                } else {
+                    System.out.println("Número no válido. Ingrese un número de la lista.");
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Entrada inválida. Ingrese un número válido.");
+                in.nextLine(); // limpiar buffer
             }
         }
 
-        // Selección de jugador negro
         while (jugadorNegro == null) {
             System.out.print("Seleccione el número para JUGADOR NEGRO (●): ");
-            int index = in.nextInt();
-            if (index >= 1 && index <= listaJugadores.size()) {
-                Jugador elegido = listaJugadores.get(index - 1);
-                if (elegido != jugadorBlanco) {
-                    jugadorNegro = elegido;
+            try {
+                int index = in.nextInt();
+                if (index >= 1 && index <= listaJugadores.size()) {
+                    Jugador elegido = listaJugadores.get(index - 1);
+                    if (elegido != jugadorBlanco) {
+                        jugadorNegro = elegido;
+                    } else {
+                        System.out.println("Debe ser un jugador diferente al Blanco.");
+                    }
                 } else {
-                    System.out.println("Debe ser un jugador diferente al Blanco.");
+                    System.out.println("Número no válido. Ingrese un número de la lista.");
                 }
-            } else {
-                System.out.println("Número no válido. Ingrese un número de la lista.");
+            } catch (InputMismatchException e) {
+                System.out.println("Entrada inválida. Ingrese un número válido.");
+                in.nextLine();
             }
         }
 
@@ -211,7 +218,7 @@ public class Sistema {
         Partida partida = new Partida(jugadorBlanco, jugadorNegro);
 
         Scanner in = new Scanner(System.in);
-        System.out.println("Ingrese la secuencia de movimientos (ej: A1C B3B C1D):");
+        System.out.println("Ingrese la secuencia de movimientos (ej: A1C B3C C2D):");
         String linea = in.nextLine().trim().toUpperCase();
         String[] jugadas = linea.split(" ");
 
@@ -219,9 +226,9 @@ public class Sistema {
         for (String jugada : jugadas) {
             partida.ejecutarMovimiento(jugada); 
             partida.getTablero().dibujarTablero(true);
+            partida.cambiarTurno();
         }
 
-        // Continuar de forma interactiva hasta terminar la partida
         partida.iniciar(); 
 
         Jugador ganador = partida.getGanador();
@@ -249,8 +256,7 @@ public class Sistema {
 
         for (int i = 0; i < listaJugadores.size(); i++) {
             Jugador p = listaJugadores.get(i);
-            System.out.printf("%d. %s - Ganadas: %d / Jugadas: %d\n", 
-                (i + 1), p.getNombre(), p.getPartidasGanadas(), p.getPartidasJugadas());
+            System.out.println((i + 1) + ". " + p);
         }
 
         System.out.println("\n--- JUGADORES INVICTOS (Alfabético) ---");
@@ -265,7 +271,7 @@ public class Sistema {
         Collections.sort(invictos, Comparator.comparing(Jugador::getNombre, String.CASE_INSENSITIVE_ORDER));
         
         if (invictos.isEmpty()) {
-            System.out.println("No hay jugadores invictos aún (deben haber jugado y ganado todo).");
+            System.out.println("No hay jugadores invictos aún.");
         } else {
             for (Jugador j : invictos) {
                 System.out.println("- " + j.getNombre());

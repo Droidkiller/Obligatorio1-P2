@@ -17,7 +17,7 @@ public class Jugador {
         this.edad = edad;
         this.partidasGanadas = 0;
         this.partidasJugadas = 0;
-        this.esInvicto = false;
+        this.esInvicto = true;
         this.color=' ';
     }
 
@@ -59,7 +59,7 @@ public class Jugador {
 
     public void setEsInvicto() {
         // Regla para ver si está invicto o no
-        this.esInvicto = partidasGanadas > 0 && partidasJugadas == partidasGanadas;
+        this.esInvicto = partidasJugadas == 0 || partidasJugadas == partidasGanadas;
     }
     
     public void setColor(char color) {
@@ -80,7 +80,8 @@ public class Jugador {
 
     @Override
     public String toString() {
-        return String.format("%s (Age: %d) | Wins: %d | Played: %d", 
-            nombre, edad, partidasGanadas, partidasJugadas);
+        return nombre + " - Edad: " + edad + 
+               " | Ganadas: " + partidasGanadas + 
+               " | Jugadas: " + partidasJugadas;
     }
 }

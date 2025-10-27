@@ -5,17 +5,16 @@
 
 package p2obligatorio1;
 
-import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Partida {
-    private Jugador jugador1;
-    private Jugador jugador2;
+    private final Jugador jugador1;
+    private final Jugador jugador2;
     private Jugador jugadorActual;
-    private Tablero tablero;
-    private boolean juegoTerminado;
-    private boolean mostrarHeaders;
     private Jugador ganador;
+    private final Tablero tablero;
+    private boolean juegoTerminado;
+    private boolean mostrarHeaders;    
     private boolean huboEmpate;
 
     public Partida(Jugador j1, Jugador j2) {
@@ -38,7 +37,7 @@ public class Partida {
     public void iniciar() {
         Scanner in = new Scanner(System.in);
         while (!juegoTerminado) {
-            tablero.dibujarTablero(mostrarHeaders);
+            
             System.out.println("\nTurno de " + jugadorActual.getNombre() + " (" + jugadorActual.getColor() + ")");
 
             boolean jugadaValida = false;
@@ -47,6 +46,7 @@ public class Partida {
                 String jugada = in.nextLine().trim().toUpperCase();
                 jugadaValida = procesarJugada(jugada, in);
             }
+            tablero.dibujarTablero(mostrarHeaders);
         }
     }
 
@@ -94,19 +94,17 @@ public class Partida {
             default:
                jugadaValida = ejecutarMovimiento(jugada);
         }
-
+        
         if (jugadaValida && !juegoTerminado) {
-            if (verificarGanador()) {
-                System.out.println("¡Hay ganador! " + ganador.getNombre());
-            } else if(cambiaTurno) {
+            char letraGanadora = verificarGanador(tablero.getTablero(), true);
+            if (letraGanadora == ' ' && cambiaTurno)
                 cambiarTurno();
-            }
         }
 
         return jugadaValida;
     }
 
-    private void cambiarTurno() {
+    public void cambiarTurno() {
         jugadorActual = (jugadorActual == jugador1) ? jugador2 : jugador1;
     }
     
@@ -164,12 +162,11 @@ public class Partida {
 
         return valido;
     }
-    
-    private boolean verificarGanador() {
-        Pieza[][] t = tablero.getTablero();
-        char[][] letras = new char[3][5]; // cada posición corresponde a la letra entera (col,col+1)
-        ArrayList<int[]> coordsGanadoras = new ArrayList<>();
-        boolean hayGanador = false;
+
+    private char verificarGanador(Pieza[][] t, boolean actualizarEstado) {
+        char[][] letras = new char[3][5]; 
+        char letraGanadora = ' ';
+        int[][] coordsGanadoras = null; 
 
         // Construir la matriz de letras según las piezas
         for (int fila = 0; fila < 3; fila++) {
@@ -192,106 +189,102 @@ public class Partida {
         }
 
         // Horizontal
-        for (int fila = 0; fila < 3 && !hayGanador; fila++) {
-            for (int col = 0; col <= 2 && !hayGanador; col++) {
+        for (int fila = 0; fila < 3 && letraGanadora == ' '; fila++) {
+            for (int col = 0; col <= 2 && letraGanadora == ' '; col++) {
                 char l = letras[fila][col];
                 if (l != ' ' && l == letras[fila][col + 1] && l == letras[fila][col + 2]) {
-                    hayGanador = true;
-                    for (int c = col; c <= col + 2; c++) {
-                        coordsGanadoras.add(new int[]{fila, c});
-                        coordsGanadoras.add(new int[]{fila, c + 1}); // segunda mitad de la letra
-                    }
-                    ganador = (l == 'O') ? jugador1 : jugador2;
+                    letraGanadora = l;
+                    coordsGanadoras = new int[][]{{fila, col}, {fila, col+1}, {fila, col+2}};
                 }
             }
         }
 
         // Vertical
-        for (int col = 0; col < 5 && !hayGanador; col++) {
+        for (int col = 0; col < 5 && letraGanadora == ' '; col++) {
             char l = letras[0][col];
             if (l != ' ' && l == letras[1][col] && l == letras[2][col]) {
-                hayGanador = true;
-                for (int fila = 0; fila < 3; fila++) {
-                    coordsGanadoras.add(new int[]{fila, col});
-                    coordsGanadoras.add(new int[]{fila, col + 1});
-                }
-                ganador = (l == 'O') ? jugador1 : jugador2;
+                letraGanadora = l;
+                coordsGanadoras = new int[][]{{0, col}, {1, col}, {2, col}};
             }
         }
 
-        // Diagonal '\' (arriba-izq → abajo-der)
-        for (int startCol = 0; startCol <= 2 && !hayGanador; startCol++) {
+        // Diagonal '\'
+        for (int startCol = 0; startCol <= 2 && letraGanadora == ' '; startCol++) {
             char l = letras[0][startCol];
             if (l != ' ' && l == letras[1][startCol + 1] && l == letras[2][startCol + 2]) {
-                hayGanador = true;
-                for (int i = 0; i < 3; i++) {
-                    coordsGanadoras.add(new int[]{i, startCol + i});
-                    coordsGanadoras.add(new int[]{i, startCol + i + 1});
-                }
-                ganador = (l == 'O') ? jugador1 : jugador2;
+                letraGanadora = l;
+                coordsGanadoras = new int[][]{{0, startCol}, {1, startCol+1}, {2, startCol+2}};
             }
         }
 
-        // Diagonal '/' (abajo-izq → arriba-der)
-        for (int startCol = 0; startCol <= 2 && !hayGanador; startCol++) {
+        // Diagonal '/'
+        for (int startCol = 0; startCol <= 2 && letraGanadora == ' '; startCol++) {
             char l = letras[2][startCol];
             if (l != ' ' && l == letras[1][startCol + 1] && l == letras[0][startCol + 2]) {
-                hayGanador = true;
-                for (int i = 0; i < 3; i++) {
-                    coordsGanadoras.add(new int[]{2 - i, startCol + i});
-                    coordsGanadoras.add(new int[]{2 - i, startCol + i + 1});
-                }
-                ganador = (l == 'O') ? jugador1 : jugador2;
+                letraGanadora = l;
+                coordsGanadoras = new int[][]{{2, startCol}, {1, startCol+1}, {0, startCol+2}};
             }
         }
 
-        if (hayGanador) {
-            tablero.resaltarAlineacionGanadora(coordsGanadoras.toArray(new int[0][]), ganador.getColor() == 'B' ? 'O' : 'X');
+        // At the end, if we found a winner and need to update state, highlight
+        if (actualizarEstado && letraGanadora != ' ') {
+            ganador = letraGanadora == 'O' ? jugador1 : jugador2;
             juegoTerminado = true;
-            tablero.dibujarTablero(mostrarHeaders);
+            tablero.resaltarAlineacionGanadora(coordsGanadoras, letraGanadora);            
         }
 
-        return hayGanador;
+        return letraGanadora;
     }
 
     private void mostrarAyuda() {
-        Pieza[][] matriz = tablero.getTablero();
+        Pieza[][] original = tablero.getTablero();
+        boolean hayJugadaGanadora = false;
+        char letraObjetivo = (jugadorActual.getColor() == 'B') ? 'O' : 'X';
 
-        for (int fila = 0; fila < 3; fila++) {
-            for (int col = 0; col < 6; col++) {
-                for (char accion : new char[]{'C', 'D', 'I'}) {
+        for (int fila = 0; fila < 3 && !hayJugadaGanadora; fila++) {
+            for (int col = 0; col < 6 && !hayJugadaGanadora; col++) {
+                char[] acciones = {'C', 'D', 'I'};
+                for (int i = 0; i < acciones.length && !hayJugadaGanadora; i++) {
+                    char accion = acciones[i];
+                    boolean jugadaValida;
 
-                    // skip invalid actions
-                    if (!esJugadaEstadoValido(fila, col, accion)) continue;
-
-                    // guardar estado original
-                    Pieza original = matriz[fila][col];
-
-                    // aplicar movimiento temporal
                     if (accion == 'C' || accion == 'D') {
-                        matriz[fila][col] = new Pieza(accion, jugadorActual.getColor());
-                    } else if (accion == 'I') {
-                        tablero.invertirPieza(fila, col);
+                        jugadaValida = (original[fila][col] == null);
+                    } else { // 'I'
+                        jugadaValida = (original[fila][col] != null && original[fila][col].getColor() == jugadorActual.getColor());
                     }
 
-                    // verificar si gana
-                    boolean gana = verificarGanador();
+                    if (jugadaValida) {
+                        // copiar tablero
+                        Pieza[][] tmpTablero = new Pieza[3][6];
+                        for (int f = 0; f < 3; f++) {
+                            for (int c = 0; c < 6; c++) {
+                                tmpTablero[f][c] = (original[f][c] == null) ? null
+                                        : new Pieza(original[f][c].getForma(), original[f][c].getColor());
+                            }
+                        }
 
-                    // revertir tablero
-                    matriz[fila][col] = original;
-                    juegoTerminado = false;  // revertir flag
-                    ganador = null;          // limpiar ganador
+                        // aplicar jugada simulada
+                        if (accion == 'C' || accion == 'D') {
+                            tmpTablero[fila][col] = new Pieza(accion, jugadorActual.getColor());
+                        } else { // 'I'
+                            tmpTablero[fila][col].invertir();
+                        }
 
-                    if (gana && ganador == jugadorActual) {
-                        System.out.printf("💡 Si jugás en %c%d%c ganás la partida.\n",
-                                (char) ('A' + fila), col + 1, accion);
-                        return;
+                        // verificar si sería un ganador solo para la letra del jugador actual
+                        char letraGanadora = verificarGanador(tmpTablero, false);
+                        if (letraGanadora == letraObjetivo) {
+                            System.out.println("(!) Jugada ganadora: " + (char)('A'+fila) + (col+1) + accion);
+                            hayJugadaGanadora = true; // solo mostrar una
+                        }
                     }
                 }
             }
         }
 
-        System.out.println("No hay jugada ganadora disponible.");
+        if (!hayJugadaGanadora) {
+            System.out.println("No hay jugada ganadora disponible.");
+        }
     }
     
     public boolean hayEmpate() {
